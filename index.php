@@ -10,6 +10,8 @@ session_start();
  * @package Luminance
  */
 
+require_once('vendor/autoload.php');
+
 /**
  * Luminance Router
  */
@@ -26,6 +28,22 @@ if($request_uri === "/")
         $hier_prefix = "App\\Controllers\\$splitter[0]";
         if(class_exists($hier_prefix))
         {
+            $controller = new $hier_prefix;
+            if(method_exists($controller, $splitter[1]))
+            {
+                $part = $splitter[1];
+                $controller->$part();
+            }
+            else
+            {
+                $errorPage = new Luminance\Controllers\Error;
+                $errorPage->file_not_found();
+                return;
+            }
+        }
+        else if(file_exists("app/Controllers/$splitter[0].php"))
+        {
+            require_once("app/Controllers/$splitter[0].php");
             $controller = new $hier_prefix;
             if(method_exists($controller, $splitter[1]))
             {
@@ -74,6 +92,22 @@ else if(isset($app_config->config["routes"][$request_uri]))
             return;
         }
     }
+    else if(file_exists("app/Controllers/$controller_arr[1].php"))
+    {
+        require_once("app/Controllers/$controller_arr[1].php");
+        $controller = new $hier_prefix;
+        if(method_exists($controller, $controller_arr[2]))
+        {
+            $part = $controller_arr[2];
+            $controller->$part();
+        }
+        else
+        {
+            $errorPage = new Luminance\Controllers\Error;
+            $errorPage->file_not_found();
+            return;
+        }
+    }
     else
     {
         $errorPage = new Luminance\Controllers\Error;
@@ -112,3 +146,4 @@ else
         $errorPage->file_not_found();
     }
 }
+
